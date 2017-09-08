@@ -3,9 +3,13 @@
 #include "opencv2/imgcodecs.hpp"
 #include <opencv2/highgui.hpp>
 #include <opencv2/ml.hpp>
+#include <array>
 
 using namespace cv;
 using namespace cv::ml;
+
+
+
 
 Mat resizeImageTo1xN(const Mat image){
 	Size size(image.cols*image.rows,1);
@@ -13,11 +17,31 @@ Mat resizeImageTo1xN(const Mat image){
 	return image;
 }
 
-Mat populateTrainingMatrix(const int numberOfImages){
-	for (auto i=0 ; i<numberOfImages;i++){
 
+
+Mat populateTrainingMat(const unsigned int numberOfImages, const unsigned int numberOfClasses){
+	Mat input = imread(0+".jpg",IMREAD_GRAYSCALE);
+	Mat trainingMatrix = Mat::zeros(numberOfClasses*numberOfImages,input.cols+1,CV_8UC3);
+	for (unsigned int i=0; i<numberOfClasses;i++){
+		for (unsigned int j=0 ; j<numberOfImages;j++){
+			input = resizeImageTo1xN(input);
+			input.copyTo(trainingMatrix(Rect(0,j,input.rows,input.cols)));
+		}
 	}
+	return trainingMatrix;
+}
 
+
+Mat populateLabelsMat(const unsigned int numberOfImages, const unsigned int numberOfClasses){
+	int size = numberOfImages *numberOfClasses;
+	int labels[size];
+	for (unsigned int i=0; i<numberOfClasses;i++){
+			for (unsigned int j=0 ; j<numberOfImages;j++){
+				labels[j]=i;
+			}
+	}
+	Mat labelsMat(size, 1, CV_32SC1, labels);
+	return labelsMat;
 }
 
 int main(int, char**)
