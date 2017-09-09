@@ -21,9 +21,9 @@ std::vector<int> populateLabels(const unsigned int numberOfImages, const unsigne
 /*****************************************************************************************************************************/
 
 
-int main(int, char**)
+auto main() -> int
 {
-	Mat trainingMatrix = populateTrainingMat(1,1);
+	Mat trainingMatrix = populateTrainingMat(NUMBEROFIMAGESPERCLASS,NUMBEROFCLASSES);
 	//Mat test = imread("C:\\Users\\Casa\\Desktop\\1.jpg",IMREAD_GRAYSCALE);
 	//Size size(test.cols*test.rows,1);
 	//std::vector<int> labels;
@@ -113,13 +113,16 @@ Mat resizeImageTo1xN(Mat image){
 Mat populateTrainingMat(const unsigned int numberOfImages, const unsigned int numberOfClasses){
 	// TO DO
 	// CORRECT THE IMREAD NAME PARAMETER
-	char *sampleImageName = "0"+IMAGETYPE.c_str();
+	//char *sampleImageName = "0"+IMAGETYPE.c_str();
+	cv::String sampleImageName = "0"+IMAGETYPE;
 	Mat sampleImage = imread(sampleImageName,IMREAD_GRAYSCALE);
 	Mat trainingMatrix = Mat::zeros(numberOfClasses*numberOfImages,sampleImage.cols*sampleImage.rows+1,CV_8UC1);
 	for (unsigned int i=0; i<numberOfClasses;i++){
 		for (unsigned int j=0 ; j<numberOfImages;j++){
 			const unsigned int imageNumber = j+(numberOfImages*i);
-			char *imageName = imageNumber + IMAGETYPE.c_str();
+			std::ostringstream ss;
+			ss<<imageNumber;                                                       // Workaround for std::to_string MinGW bug
+			cv::String imageName =  ss.str() + IMAGETYPE;
  			Mat input=imread(imageName ,IMREAD_GRAYSCALE);
 			Mat resizedInput = resizeImageTo1xN(input);
 			resizedInput.copyTo(trainingMatrix(Rect(0,j+(numberOfImages*i),resizedInput.cols,resizedInput.rows)));
