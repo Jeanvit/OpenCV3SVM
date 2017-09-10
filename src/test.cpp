@@ -12,28 +12,21 @@ using namespace cv;
 using namespace cv::ml;
 /*****************************************************************************************************************************/
 const std::string IMAGETYPE = ".jpg";
-const unsigned int NUMBEROFCLASSES = 1;
-const unsigned int NUMBEROFIMAGESPERCLASS = 1;
+const unsigned int NUMBEROFCLASSES = 3;
+const unsigned int NUMBEROFIMAGESPERCLASS = 10;
+const unsigned int IMAGERESOLUTION = 250;
 /*****************************************************************************************************************************/
 Mat resizeImageTo1xN(Mat image);
+Mat resizeImage(Mat image);
 Mat populateTrainingMat(const unsigned int numberOfImages, const unsigned int numberOfClasses);
-std::vector<int> populateLabels(const unsigned int numberOfImages, const unsigned int numberOfClasses);
+Mat populateLabels(const unsigned int numberOfImages, const unsigned int numberOfClasses);
 /*****************************************************************************************************************************/
 
 
 auto main() -> int
 {
 	Mat trainingMatrix = populateTrainingMat(NUMBEROFIMAGESPERCLASS,NUMBEROFCLASSES);
-	//Mat test = imread("C:\\Users\\Casa\\Desktop\\1.jpg",IMREAD_GRAYSCALE);
-	//Size size(test.cols*test.rows,1);
-	//std::vector<int> labels;
-	//resize(test,test,size);
-	//labels=populateLabels(10,3);
-	//for (int j=0 ; j<30;j++){
-
-	//				std::cout<<labels[j]<<" ";
-	//			}
-
+	Mat labels=populateLabels(NUMBEROFIMAGESPERCLASS,NUMBEROFCLASSES);
 
 
 	/*
@@ -96,8 +89,8 @@ auto main() -> int
 
     imwrite("result.png", image);        // save the image
 */
-   // imshow("SVM Simple Example", trainingMatrix); // show it to the user
-    std::cout<<(int)trainingMatrix.at<uchar>(0,trainingMatrix.cols);
+    // show it to the user
+    //std::cout<<(int)trainingMatrix.at<uchar>(0,trainingMatrix.cols);
     waitKey(0);
 
 }
@@ -105,6 +98,12 @@ auto main() -> int
 /*****************************************************************************************************************************/
 Mat resizeImageTo1xN(Mat image){
 	Size size(image.cols*image.rows,1);
+	resize(image,image,size);
+	return image;
+}
+/*****************************************************************************************************************************/
+Mat resizeImage(Mat image){
+	Size size(IMAGERESOLUTION,IMAGERESOLUTION);
 	resize(image,image,size);
 	return image;
 }
@@ -116,7 +115,7 @@ Mat populateTrainingMat(const unsigned int numberOfImages, const unsigned int nu
 	//char *sampleImageName = "0"+IMAGETYPE.c_str();
 	cv::String sampleImageName = "0"+IMAGETYPE;
 	Mat sampleImage = imread(sampleImageName,IMREAD_GRAYSCALE);
-	Mat trainingMatrix = Mat::zeros(numberOfClasses*numberOfImages,sampleImage.cols*sampleImage.rows+1,CV_8UC1);
+	Mat trainingMatrix = Mat::zeros(numberOfClasses*numberOfImages,sampleImage.cols*sampleImage.rows,CV_8UC1);
 	for (unsigned int i=0; i<numberOfClasses;i++){
 		for (unsigned int j=0 ; j<numberOfImages;j++){
 			const unsigned int imageNumber = j+(numberOfImages*i);
@@ -124,15 +123,15 @@ Mat populateTrainingMat(const unsigned int numberOfImages, const unsigned int nu
 			ss<<imageNumber;                                                       // Workaround for std::to_string MinGW bug
 			cv::String imageName =  ss.str() + IMAGETYPE;
  			Mat input=imread(imageName ,IMREAD_GRAYSCALE);
-			Mat resizedInput = resizeImageTo1xN(input);
+ 			Mat correctedInput=resizeImage(input);
+			Mat resizedInput = resizeImageTo1xN(correctedInput);
 			resizedInput.copyTo(trainingMatrix(Rect(0,j+(numberOfImages*i),resizedInput.cols,resizedInput.rows)));
-			trainingMatrix.at<uchar>(j,trainingMatrix.cols+1)=i;
 		}
 	}
 	return trainingMatrix;
 }
 /*****************************************************************************************************************************/
-std::vector<int> populateLabels(const unsigned int numberOfImages, const unsigned int numberOfClasses){
+Mat populateLabels(const unsigned int numberOfImages, const unsigned int numberOfClasses){
 	int size = numberOfImages *numberOfClasses;
 	std::vector<int> labels(size);
 	for (unsigned int i=0; i<numberOfClasses;i++){
@@ -140,7 +139,8 @@ std::vector<int> populateLabels(const unsigned int numberOfImages, const unsigne
 				labels.at(j+(numberOfImages*i))=i;
 			}
 	}
-	return labels;
+	Mat labelsMat(numberOfImages, 1, CV_32SC1, labels.data());
+	return labelsMat;
 }
 
 /*****************************************************************************************************************************/
