@@ -7,113 +7,85 @@
 #include <string>
 #include <iostream>
 #include <sstream>
+
 /*****************************************************************************************************************************/
+//Namespaces
 using namespace cv;
 using namespace cv::ml;
+using std::cout;
+using std::endl;
+
 /*****************************************************************************************************************************/
-const std::string IMAGETYPE = ".jpg";
-const unsigned int NUMBEROFCLASSES = 1;
-const unsigned int NUMBEROFIMAGESPERCLASS =5;
-const unsigned int IMAGERESOLUTION = 250;
+//Global
+const std::string IMAGETYPE = ".jpg";              //Image type for all images inside the program
+const unsigned int NUMBEROFCLASSES = 2;			   //Number of classes used in the Training
+const unsigned int NUMBEROFIMAGESPERCLASS =10;     //Number of Images in each class
+const unsigned int IMAGERESOLUTION = 250;          //Y and X resolution for all images
+
 /*****************************************************************************************************************************/
-Mat resizeImageTo1xN(Mat image);
-Mat resizeImage(Mat image);
+//Headers
+Mat resizeTo1xN(Mat image);
 Mat populateTrainingMat(const unsigned int numberOfImages, const unsigned int numberOfClasses);
 Mat populateLabels(const unsigned int numberOfImages, const unsigned int numberOfClasses);
+void printSupportVectors(Ptr<SVM> svm);
+
 /*****************************************************************************************************************************/
-
-
+//Main
 auto main() -> int {
-
+	cout<<"Parameters: "<<"extension: "<<IMAGETYPE<<" Nclasses: "<<NUMBEROFCLASSES<<" Nimages: "<<NUMBEROFIMAGESPERCLASS<<" Resolution: "<<IMAGERESOLUTION<<endl;
 	Mat testImage = imread("test.jpg",IMREAD_GRAYSCALE);
-	Mat correctedInput=resizeImage(testImage);
-	Mat sampleImage = resizeImageTo1xN(correctedInput);
+	Mat sampleImage = resizeTo1xN(testImage);
 	sampleImage.convertTo(sampleImage,CV_32F);
-
 	Mat trainingMatrix = populateTrainingMat(NUMBEROFIMAGESPERCLASS,NUMBEROFCLASSES);
 	Mat labels=populateLabels(NUMBEROFIMAGESPERCLASS,NUMBEROFCLASSES);
-	//trainingMatrix.reshape(1, trainingMatrix.rows);
-
-
-
-    // Data for visual representation
-    int width = 512, height = 512;
-    Mat image = Mat::zeros(height, width, CV_8UC3);
-
-
+	cout<<"Train data"<<endl<<"rows: "<<trainingMatrix.rows<<" cols: "<<trainingMatrix.cols<<endl<<endl;
+	cout<<"Labels"<<endl<<"rows: "<<labels.rows<<" cols: "<<labels.cols<<endl<<endl;
+	cout<<"Prediction Image"<<endl<<"rows: "<<sampleImage.rows<<" cols: "<<sampleImage.cols<<endl<<endl;
 
     // Set up SVM's parameters
+    cout<<"Setting up SVM's parameters.";
     Ptr<SVM> svm = SVM::create();
     svm->setType(SVM::C_SVC);
     svm->setKernel(SVM::LINEAR);
     svm->setTermCriteria(TermCriteria(TermCriteria::MAX_ITER, 100, 1e-6));
+    cout<<"..Done!"<<endl;
 
     // Train the SVM with given parameters
     Ptr<TrainData> td = TrainData::create(trainingMatrix, ROW_SAMPLE, labels);
-   svm->train(td);
+    cout<<"Training SVM.";
+    svm->train(td);
+    cout<<"..Done!"<<endl<<endl;
 
-    // Or train the SVM with optimal parameters
+    // Train the SVM with optimal parameters
     //svm->trainAuto(td);
 
-    Vec3b green(0, 255, 0), blue(255, 0, 0);
-    // Show the decision regions given by the SVM
-    for (int i = 0; i < image.rows; ++i)
-        for (int j = 0; j < image.cols; ++j)
-        {
-            float response = svm->predict(sampleImage);
+    float response = svm->predict(sampleImage);
+    cout<<"The test image belongs to class: "<<response<<endl;
 
-            if (response == 1)
-                image.at<Vec3b>(i, j) = green;
-            else if (response == -1)
-                image.at<Vec3b>(i, j) = blue;
-      }
+    printSupportVectors(svm);
 
-    // Show the training data
-    int thickness = -1;
-    int lineType = 8;
-    circle(image, Point(501, 10), 5, Scalar(0, 0, 0), thickness, lineType);
-    circle(image, Point(255, 10), 5, Scalar(255, 255, 255), thickness, lineType);
-    circle(image, Point(501, 255), 5, Scalar(255, 255, 255), thickness, lineType);
-    circle(image, Point(10, 501), 5, Scalar(255, 255, 255), thickness, lineType);
-
-    // Show support vectors
-    thickness = 2;
-    lineType = 8;
-    Mat sv = svm->getSupportVectors();
-
-    for (int i = 0; i < sv.rows; ++i)
-    {
-        const float* v = sv.ptr<float>(i);
-        circle(image, Point((int)v[0], (int)v[1]), 6, Scalar(128, 128, 128), thickness, lineType);
-    }
-
-    imwrite("result.png", image);        // save the image
-
-    // show it to the user
-    //std::cout<<(int)trainingMatrix.at<uchar>(0,trainingMatrix.cols);
     waitKey(0);
-
 }
 
-/*****************************************************************************************************************************/
-Mat resizeImageTo1xN(Mat image){
-	Size size(image.cols*image.rows,1);
-	resize(image,image,size);
-	return image;
-}
-/*****************************************************************************************************************************/
-Mat resizeImage(Mat image){
+/******************************************************************************************************************************/
+Mat resizeTo1xN(Mat image){
+	/* This function resize the given image into a 1xN Mat
+	 * @param Mat image - The image to be resized
+	 */
 	Size size(IMAGERESOLUTION,IMAGERESOLUTION);
 	resize(image,image,size);
+	Size size1xN(image.cols*image.rows,1);
+	resize(image,image,size1xN);
 	return image;
-}
 
+}
 /*****************************************************************************************************************************/
 Mat populateTrainingMat(const unsigned int numberOfImages, const unsigned int numberOfClasses){
-	// TO DO
-	// CORRECT THE IMREAD NAME PARAMETER
-	//char *sampleImageName = "0"+IMAGETYPE.c_str();
-	//cv::String sampleImageName = "0"+IMAGETYPE;
+	/*Build the trainig Matrix for the the SVM. Each line will be a image.
+	 * @param  const unsigned int numberOfImages
+	 * @param const unsigned int numberOfClasses
+	 *
+	 */
 	Mat trainingMatrix = Mat::zeros(numberOfClasses*numberOfImages,IMAGERESOLUTION*IMAGERESOLUTION,CV_32F);
 	for (unsigned int i=0; i<numberOfClasses;i++){
 		for (unsigned int j=0 ; j<numberOfImages;j++){
@@ -122,25 +94,51 @@ Mat populateTrainingMat(const unsigned int numberOfImages, const unsigned int nu
 			ss<<imageNumber;                                                       // Workaround for std::to_string MinGW bug
 			cv::String imageName =  ss.str() + IMAGETYPE;
  			Mat input=imread(imageName ,IMREAD_GRAYSCALE);
- 			Mat correctedInput=resizeImage(input);
-			Mat resizedInput = resizeImageTo1xN(correctedInput);
+ 			Mat resizedInput=resizeTo1xN(input);
 			resizedInput.copyTo(trainingMatrix(Rect(0,j+(numberOfImages*i),resizedInput.cols,resizedInput.rows)));
 		}
 	}
-	std::cout<<trainingMatrix.rows<<"   "<<trainingMatrix.cols<<std::endl;
 	return trainingMatrix;
 }
+
 /*****************************************************************************************************************************/
 Mat populateLabels(const unsigned int numberOfImages, const unsigned int numberOfClasses){
+	/*Build the trainig Matrix's Labels for the the SVM. Each line will be the label of the respective image in the TrainingMat.
+		 * @param  const unsigned int numberOfImages
+		 * @param const unsigned int numberOfClasses
+		 *
+		 */
 	std::vector<int> labels;
 	for (unsigned int i=0; i<numberOfClasses;i++){
 			for (unsigned int j=0 ; j<numberOfImages;j++){
 				labels.push_back(i);
-				//std::cout<<"Label:"<<labels.at(j+(numberOfImages*i));
 			}
 	}
-	Mat labelsMat(numberOfImages, 1, CV_32SC1 , labels.data());
+	Mat labelsMat(numberOfImages*numberOfClasses, 1, CV_32SC1 , labels.data());
 	return labelsMat;
+
 }
 
+/*****************************************************************************************************************************/
+void printSupportVectors(Ptr<SVM> svm){
+	/* Print the Support Vectors.
+	 * @param Ptr<SVM> svm The svm containing the Support Vectors to show
+	 */
+	// Data for visual representation
+	int width = 512, height = 512;
+	Mat image = Mat::zeros(height, width, CV_8UC3);
+	int thickness = -1;
+	int lineType = 8;
+	// Show support vectors
+	thickness = 2;
+	lineType  = 8;
+	Mat sv = svm->getUncompressedSupportVectors();
+	for (int i = 0; i < sv.rows; ++i){
+		const float* v = sv.ptr<float>(i);
+		circle( image,  Point( (int) v[0], (int) v[1]),   6,  Scalar(30, 128, 0), thickness, lineType);
+	}
+	imwrite("result.png", image);
+	imshow("SVM Simple Example", image);
+
+}
 /*****************************************************************************************************************************/
