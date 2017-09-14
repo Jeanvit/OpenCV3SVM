@@ -1,6 +1,6 @@
 #include <opencv2/core.hpp>
 #include <opencv2/imgproc.hpp>
-#include "opencv2/imgcodecs.hpp"
+#include <opencv2/imgcodecs.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/ml.hpp>
 #include <vector>
@@ -20,7 +20,7 @@ using std::endl;
 const std::string IMAGETYPE = ".jpg";              //Image type for all images inside the program
 const unsigned int NUMBEROFCLASSES = 2;			   //Number of classes used in the Training
 const unsigned int NUMBEROFIMAGESPERCLASS =10;     //Number of Images in each class
-const unsigned int IMAGERESOLUTION = 250;          //Y and X resolution for all images
+const unsigned int IMAGERESOLUTION = 256;          //Y and X resolution for all images
 
 /*****************************************************************************************************************************/
 //Headers
@@ -31,9 +31,18 @@ void printSupportVectors(Ptr<SVM> svm);
 
 /*****************************************************************************************************************************/
 //Main
-auto main() -> int {
-	cout<<"Parameters: "<<"extension: "<<IMAGETYPE<<" Nclasses: "<<NUMBEROFCLASSES<<" Nimages: "<<NUMBEROFIMAGESPERCLASS<<" Resolution: "<<IMAGERESOLUTION<<endl;
-	Mat testImage = imread("test.jpg",IMREAD_GRAYSCALE);
+auto main(int argc, char *argv[]) -> int {
+	Mat testImage;
+	if (argc>1){
+		std::string image = argv[1];
+		testImage = imread(image.c_str(),IMREAD_GRAYSCALE);
+		cout<<"Parameters: "<<"extension: "<<IMAGETYPE<<" Nclasses: "<<NUMBEROFCLASSES<<" Nimages: "<<NUMBEROFIMAGESPERCLASS<<" Resolution: "<<IMAGERESOLUTION<<endl;
+	}
+	else {
+		cout<<"Please, specify the test image!";
+		return(0);
+	}
+
 	Mat sampleImage = resizeTo1xN(testImage);
 	sampleImage.convertTo(sampleImage,CV_32F);
 	Mat trainingMatrix = populateTrainingMat(NUMBEROFIMAGESPERCLASS,NUMBEROFCLASSES);
@@ -138,7 +147,7 @@ void printSupportVectors(Ptr<SVM> svm){
 		circle( image,  Point( (int) v[0], (int) v[1]),   6,  Scalar(30, 128, 0), thickness, lineType);
 	}
 	imwrite("result.png", image);
-	imshow("SVM Simple Example", image);
+	imshow("Uncompressed Support Vectors", image);
 
 }
 /*****************************************************************************************************************************/
