@@ -126,6 +126,8 @@ Mat edgeDetection(Mat image){
 	 int ddepth = CV_32F;
 	 Mat gradX, gradY;
 	 Mat absGradX, absGradY;
+
+	 // Gradient X
 	 Sobel( image, gradX, ddepth, 1, 0, 3, scale, delta, BORDER_DEFAULT );
 	 convertScaleAbs( gradX, absGradX );
 
