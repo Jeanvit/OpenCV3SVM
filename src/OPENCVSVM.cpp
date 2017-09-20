@@ -28,7 +28,7 @@ Mat resizeTo1xN(Mat image);
 Mat populateTrainingMat(const unsigned int numberOfImages, const unsigned int numberOfClasses);
 Mat populateLabels(const unsigned int numberOfImages, const unsigned int numberOfClasses);
 void printSupportVectors(Ptr<SVM> svm);
-
+Mat edgeDetection(Mat image);
 /*****************************************************************************************************************************/
 //Main
 auto main(int argc, char *argv[]) -> int {
@@ -36,6 +36,10 @@ auto main(int argc, char *argv[]) -> int {
 	if (argc>1){
 		std::string image = argv[1];
 		testImage = imread(image.c_str(),IMREAD_GRAYSCALE);
+		if (!testImage.data){
+			cout<<"Error opening the image!";
+			return (0);
+		}
 		cout<<"Parameters: "<<"extension: "<<IMAGETYPE<<" Nclasses: "<<NUMBEROFCLASSES<<" Nimages: "<<NUMBEROFIMAGESPERCLASS<<" Resolution: "<<IMAGERESOLUTION<<endl;
 	}
 	else {
@@ -43,7 +47,7 @@ auto main(int argc, char *argv[]) -> int {
 		return(0);
 	}
 
-	Mat sampleImage = resizeTo1xN(testImage);
+	Mat sampleImage = resizeTo1xN(edgeDetection(testImage));
 	sampleImage.convertTo(sampleImage,CV_32F);
 	Mat trainingMatrix = populateTrainingMat(NUMBEROFIMAGESPERCLASS,NUMBEROFCLASSES);
 	Mat labels=populateLabels(NUMBEROFIMAGESPERCLASS,NUMBEROFCLASSES);
@@ -54,9 +58,9 @@ auto main(int argc, char *argv[]) -> int {
     // Set up SVM's parameters
     cout<<"Setting up SVM's parameters.";
     Ptr<SVM> svm = SVM::create();
-    svm->setType(SVM::C_SVC);
+    svm->setType(SVM::C_SVC );
     svm->setKernel(SVM::LINEAR);
-    svm->setTermCriteria(TermCriteria(TermCriteria::MAX_ITER, 100, 1e-6));
+    svm->setTermCriteria(TermCriteria(TermCriteria::MAX_ITER, 10000, 1e-6));
     cout<<"..Done!"<<endl;
 
     // Train the SVM with given parameters
@@ -71,7 +75,7 @@ auto main(int argc, char *argv[]) -> int {
     float response = svm->predict(sampleImage);
     cout<<"The test image belongs to class: "<<response<<endl;
 
-    printSupportVectors(svm);
+    //printSupportVectors(svm);
 
     waitKey(0);
 }
@@ -103,11 +107,35 @@ Mat populateTrainingMat(const unsigned int numberOfImages, const unsigned int nu
 			ss<<imageNumber;                                                       // Workaround for std::to_string MinGW bug
 			cv::String imageName =  ss.str() + IMAGETYPE;
  			Mat input=imread(imageName ,IMREAD_GRAYSCALE);
+ 			input=edgeDetection(input);
  			Mat resizedInput=resizeTo1xN(input);
 			resizedInput.copyTo(trainingMatrix(Rect(0,j+(numberOfImages*i),resizedInput.cols,resizedInput.rows)));
 		}
 	}
 	return trainingMatrix;
+}
+
+/*****************************************************************************************************************************/
+Mat edgeDetection(Mat image){
+	/*Uses the Sobel–Feldman operator to extract the image edges
+			 * @param  Mat image - The image to be processed
+			 *
+			 */
+	 int scale = 1;
+	 int delta = 0;
+	 int ddepth = CV_32F;
+	 Mat gradX, gradY;
+	 Mat absGradX, absGradY;
+	 Sobel( image, gradX, ddepth, 1, 0, 3, scale, delta, BORDER_DEFAULT );
+	 convertScaleAbs( gradX, absGradX );
+
+	 // Gradient Y
+	 Sobel( image, gradY, ddepth, 0, 1, 3, scale, delta, BORDER_DEFAULT );
+	 convertScaleAbs( gradY, absGradY );
+
+	 // Total Gradient (approximate)
+	 addWeighted( absGradX, 0.5, absGradY, 0.5, 0, image );
+	 return image;
 }
 
 /*****************************************************************************************************************************/
