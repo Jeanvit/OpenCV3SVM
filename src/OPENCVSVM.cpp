@@ -27,7 +27,7 @@ const unsigned int IMAGERESOLUTION = 256;          //Y and X resolution for all 
 Mat resizeTo1xN(Mat image);
 Mat populateTrainingMat(const unsigned int numberOfImages, const unsigned int numberOfClasses);
 Mat populateLabels(const unsigned int numberOfImages, const unsigned int numberOfClasses);
-void printSupportVectors(Ptr<SVM> svm);
+void printSupportVectors(const Ptr<SVM>& svm);
 Mat edgeDetection(Mat image);
 /*****************************************************************************************************************************/
 //Main
@@ -75,7 +75,7 @@ auto main(int argc, char *argv[]) -> int {
     float response = svm->predict(sampleImage);
     cout<<"The test image belongs to class: "<<response<<endl;
 
-    //printSupportVectors(svm);
+    printSupportVectors(svm);
 
     waitKey(0);
 }
@@ -159,7 +159,7 @@ Mat populateLabels(const unsigned int numberOfImages, const unsigned int numberO
 }
 
 /*****************************************************************************************************************************/
-void printSupportVectors(Ptr<SVM> svm){
+void printSupportVectors(const Ptr<SVM>& svm){
 	/* Print the Support Vectors.
 	 * @param Ptr<SVM> svm The svm containing the Support Vectors to show
 	 */
