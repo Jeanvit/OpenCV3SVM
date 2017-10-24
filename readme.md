@@ -6,6 +6,14 @@ If you'd like, it's possible to train it using another kind of pictures.
 
 # Compiling
   You will need OpenCV with [contrib modules](http://jeanvitor.com/cpp-opencv-windonws10-installing/).
+  Considering the OpenCV folders `C:\\opencv-master\\mingw_build\\install\\include` and `C:\\opencv-master\\mingw_build\\install\\x86\\mingw\\lib`:
+  
+### G++
+1. `cd src`
+
+2. `g++ "-IC:\\opencv-master\\mingw_build\\install\\include" -O0 -g3 -Wall -c -fmessage-length=0 -std=c++14 -o "OPENCVSVM.o" "OPENCVSVM.cpp"` 
+
+3.`g++ "-LC:\\opencv-master\\mingw_build\\install\\x86\\mingw\\lib" -o OPENCVSVM.exe "OPENCVSVM.o" -lopencv_calib3d330 -lopencv_imgcodecs330 -lopencv_imgproc330 -lopencv_ml330 -lopencv_objdetect330 -lopencv_photo330 -lopencv_shape330 -lopencv_core330 -lopencv_features2d330 -lopencv_highgui330 `
 
 
 # Results 
