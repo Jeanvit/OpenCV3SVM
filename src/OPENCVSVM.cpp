@@ -18,7 +18,7 @@ using std::endl;
 /*****************************************************************************************************************************/
 //Global
 const std::string IMAGETYPE = ".jpg";              //Image type for all images inside the program
-const unsigned int NUMBEROFCLASSES = 2;			   //Number of classes used in the Training
+const unsigned int NUMBEROFCLASSES = 2;		   //Number of classes used in the Training
 const unsigned int NUMBEROFIMAGESPERCLASS =10;     //Number of Images in each class
 const unsigned int IMAGERESOLUTION = 256;          //Y and X resolution for all images
 
@@ -94,7 +94,7 @@ Mat resizeTo1xN(Mat image){
 }
 /*****************************************************************************************************************************/
 Mat populateTrainingMat(const unsigned int numberOfImages, const unsigned int numberOfClasses){
-	/*Build the trainig Matrix for the the SVM. Each line will be a image.
+	/*Build the trainig Matrix for the the SVM. Each line will be an image.
 	 * @param  const unsigned int numberOfImages
 	 * @param const unsigned int numberOfClasses
 	 *
@@ -117,7 +117,7 @@ Mat populateTrainingMat(const unsigned int numberOfImages, const unsigned int nu
 
 /*****************************************************************************************************************************/
 Mat edgeDetection(Mat image){
-	/*Uses the Sobel–Feldman operator to extract the image edges
+	/*Uses the Sobelâ€“Feldman operator to extract the image edges
 			 * @param  Mat image - The image to be processed
 			 *
 			 */
@@ -142,7 +142,7 @@ Mat edgeDetection(Mat image){
 
 /*****************************************************************************************************************************/
 Mat populateLabels(const unsigned int numberOfImages, const unsigned int numberOfClasses){
-	/*Build the trainig Matrix's Labels for the the SVM. Each line will be the label of the respective image in the TrainingMat.
+	/*Build the training Matrix's Labels for the SVM. Each line will be the label of the respective image in the TrainingMat.
 		 * @param  const unsigned int numberOfImages
 		 * @param const unsigned int numberOfClasses
 		 *
@@ -161,7 +161,7 @@ Mat populateLabels(const unsigned int numberOfImages, const unsigned int numberO
 /*****************************************************************************************************************************/
 void printSupportVectors(const Ptr<SVM>& svm){
 	/* Print the Support Vectors.
-	 * @param Ptr<SVM> svm The svm containing the Support Vectors to show
+	 * @param Ptr<SVM> svm The SVM containing the Support Vectors to show
 	 */
 	// Data for visual representation
 	int width = 512, height = 512;
